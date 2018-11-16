@@ -58,7 +58,7 @@ Each flavor has its own set of build-files in a corresponding subfolder of [dock
 ```
 and the following after line 125:
 ```
-       RUN Rscript -e 'install.packages("caret",repos = ""http://cran.r-project.org"")' && \
+       RUN Rscript -e 'install.packages("caret",repos = "http://cran.r-project.org")' && \
 ```
 This will install the latest release of the `caret` package as found on [CRAN](https://cran.r-project.org/web/packages/caret/vignettes/caret.html). See [here](https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/) for more in-depth information on Dockerfiles.
 
@@ -78,7 +78,7 @@ $ ./test --flavor=standard_60
 ```
 7. Upload this zip file into BucketFS. Create a bucket called `rlibs` in `bucketfs1` and accordingly use `/buckets/bucketfs1/rlibs` as the directory for the the upload. Make sure that you mark this new bucket as *Public readable*.  We assume the writable password `w` and the bucketname `rlibs` in a bucketfs that is running on port `8080` on machine `192.168.56.101`)
 ```bash
-curl -v -X PUT -T standard_60.tar.gz w:w@192.168.56.101:8080/rdfs/standard_60.tar.gz
+curl -v -X PUT -T standard_60.tar.gz w:w@192.168.56.101:8080/rlibs/standard_60.tar.gz
 ```
 This new container will be used to define an extended R language in the database. We can call it `MYLANG`. For the first test this is only done for the current EXAplus session. Note that you can have multiple R environments in parallel, e.g. one for production and others for development, testing etc. The default built-in R environment is not modified at all.
 
@@ -86,9 +86,12 @@ We now add an example script to the database using EXAplus. Note that it’s not
 
 Make sure that in `EXASolution-<version>` the right version number (of your Exasol DB in the VM) is specified. Also, note that the extension `.tar.gz` should not be included.
 
+In SQL you activate the language implementation by using a statement like this
 ``` sql
 ALTER SESSION SET script_languages = 'PYTHON=builtin_python R=builtin_r JAVA=builtin_java MYLANG=localzmq+protobuf:///bucketfs1/rlibz/standard_60?lang=r#buckets/bfsdefault/default/EXASolution-6.0.12/exaudfclient';
-
+```
+Test the added library 
+``` sql
 CREATE OR REPLACE MYLANG SCALAR SCRIPT bh_schema.test_script ("i" DECIMAL(18,0)) RETURNS DECIMAL(18,0) AS
     
 library(caret)
@@ -97,8 +100,9 @@ run <- function(ctx){
   return (1) 
 }
 /
-
+```
 -- Test the newly installed script
+``` sql
 SELECT bh_schema.test_script(0) FROM DUAL;
 ```
 If we want the connection to be valid in all sessions we use replace `ALTER SESSION SET …` with `ALTER SYSTEM SET …`.
@@ -114,6 +118,8 @@ This approach has certain advantages:
 ```bash
 ./clean --flavor=standard_60
 ```
+(Please note, at the moment we do not delete the Linux image that is used as basis)
+
 Extend the existing default container
 =====================================
 
