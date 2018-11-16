@@ -52,7 +52,7 @@ This project support different versions of script language environments with dif
 We call these versions _flavors_ for no particular reason.
 Each flavor has its own set of build-files in a corresponding subfolder of [dockerfiles](dockerfiles).
 
-3.  In a text editor open the `Dockerfile` found in `<github-root>/script-languages/flavors/<flavor>/DockerFile. This file contains a set of Linux commands which are used to create the container. When we build and run the container, it will maintain the Linux version and all the libraries specified here. So we now make sure that our new R package is added to it. To do this we add the following command after line 23:
+3.  In a text editor open the `Dockerfile` found in `<github-root>/script-languages/flavors/{flavor}/DockerFile. This file contains a set of Linux commands which are used to create the container. When we build and run the container, it will maintain the Linux version and all the libraries specified here. So we now make sure that our new R package is added to it. To do this we add the following command after line 23:
 ```
         libcurl4-openssl-dev \
 ```
