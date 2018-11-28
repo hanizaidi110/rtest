@@ -532,7 +532,8 @@ SELECT bh_schema.predict3(id,crim, zn, indus, chas, nox, rm, age, dis, rad, tax,
 FROM   bh_schema.bostonhousing
 WHERE  split = 'Test'
 GROUP by iproc()
-ORDER  BY id;
+ORDER  BY id
+MOD(ROWNUMBER,32);
 ```
 
 Note that the UDFs we created are saved in your schema and can be accessed via EXAPlus.
