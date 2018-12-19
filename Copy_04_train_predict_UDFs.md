@@ -259,6 +259,7 @@ PredictInExasol <- exa.createScript(
 prediction_output = PredictInExasol("id","crim", "zn", "indus", "chas", "nox", "rm", "age", "dis",
                                     "rad", "tax", "ptratio", "b", "lstat", "medv", "split",
                                     table = "bh_schema.BostonHousing",
+                                    groupBy = "iproc(),mod(iproc(),5)",
                                     where = "split = 'Test'")  
 
 # Check the root mean squared error (RMSE)
@@ -375,7 +376,8 @@ TrainInExasol2 <- exa.createScript(
 variable_importance = TrainInExasol2("id","crim", "zn", "indus", "chas", "nox", "rm", "age", "dis",
                                      "rad", "tax", "ptratio", "b", "lstat", "medv", "split",
                                      table = "bh_schema.BostonHousing",
-                                     where = "split = 'Train'")
+                                      groupBy = "iproc(),mod(iproc(),5)",
+                                      where = "split = 'Train'")
 ```
 
 Now that we have model, `rf_model2`, stored in BucketFS we will use it to make predictions on our test data which lives in the EXASOL database. The testing procedure is the same as in the scenario above.
@@ -459,6 +461,7 @@ PredictInExasol2 <- exa.createScript(
 prediction_output2 = PredictInExasol2("id","crim", "zn", "indus", "chas", "nox", "rm", "age", "dis",
                                       "rad", "tax", "ptratio", "b", "lstat", "medv", "split",
                                       table = "bh_schema.BostonHousing",
+                                      groupBy = "iproc(),mod(iproc(),5)",
                                       where = "split = 'Test'")
 
 # Check the root mean squared error (RMSE)
@@ -531,9 +534,11 @@ run <- function(ctx) {
 SELECT bh_schema.predict3(id,crim, zn, indus, chas, nox, rm, age, dis, rad, tax, ptratio, b, lstat, medv, split)
 FROM   bh_schema.bostonhousing
 WHERE  split = 'Test'
-GROUP by iproc()
-ORDER  BY id
-MOD(ROWNUMBER,32);
+-- the node number for data locality
+GROUP BY iproc(),
+-- number of processes per node
+mod(iproc(),5)
+ORDER BY ID;
 ```
 
 Note that the UDFs we created are saved in your schema and can be accessed via EXAPlus.
